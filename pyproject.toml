@@ -100,3 +100,6 @@ module = [
     "yandex.cloud.*",
 ]
 ignore_missing_imports = true 
+
+[project.entry-points."ansible.plugins.inventory"]
+yandex_cloud_inventory = "inventory_plugins.yandex_cloud_inventory"
