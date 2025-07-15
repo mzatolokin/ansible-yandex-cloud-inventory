@@ -50,25 +50,39 @@ class InventoryModule(BaseInventoryPlugin):
         self._read_config_data(path)
 
         sa_key_file = self.get_option('service_account_key_file')
-        # Попытка взять IAM token из конфигурации, иначе из переменной окружения
-        iam_token = self.get_option('iam_token') or os.getenv('YC_IAM_TOKEN')
+        iam_token = self.get_option('iam_token')
         folder_id = self.get_option('folder_id')
         group = self.get_option('group')
 
         # Проверяем входные параметры
         if not folder_id:
             raise AnsibleParserError("Option 'folder_id' is required")
-        if not iam_token and not sa_key_file:
-            raise AnsibleParserError("Either 'iam_token' or 'service_account_key_file' must be provided")
-        if not iam_token and sa_key_file and not os.path.isfile(sa_key_file):
+        
+        # Проверяем наличие файла сервисного аккаунта
+        if sa_key_file and not os.path.isfile(sa_key_file):
             raise AnsibleError(f"Service account key file not found: {sa_key_file}")
+        
+        # Если нет IAM токена в конфигурации, берем из переменной окружения
+        if not iam_token:
+            iam_token = os.getenv('YC_IAM_TOKEN')
+        
+        # Проверяем, что есть хотя бы один способ аутентификации
+        if not sa_key_file and not iam_token:
+            raise AnsibleParserError("Either 'service_account_key_file', 'iam_token', or 'YC_IAM_TOKEN' environment variable must be provided")
 
-        # Инициализируем SDK с выбором источника токена
+        # Инициализируем SDK с приоритетом: service_account_key_file > iam_token
         try:
-            if iam_token:
+            if sa_key_file:
+                # Приоритет 1: Сервисный аккаунт
+                with open(sa_key_file, 'r') as infile:
+                    sa_key = json.load(infile)
+                sdk = SDK(service_account_key=sa_key)
+            elif iam_token:
+                # Приоритет 2: IAM токен
                 sdk = SDK(iam_token=iam_token)
             else:
-                sdk = SDK(service_account_key_file=sa_key_file)
+                raise AnsibleError("No authentication method provided")
+            
             zone_client = sdk.client(ZoneServiceStub)
             instance_client = sdk.client(InstanceServiceStub)
         except Exception as e:

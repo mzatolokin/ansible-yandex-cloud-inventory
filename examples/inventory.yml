@@ -1,0 +1,4 @@
+plugin: yandex_cloud_inventory
+folder_id: <YOUR_FOLDER_ID>
+group: ycloud_group
+service_account_key_file: <YOUR_SERVICE_ACCOUNT_KEY_FILE>
