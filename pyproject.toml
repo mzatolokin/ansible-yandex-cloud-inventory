@@ -53,6 +53,9 @@ dev = [
 [project.scripts]
 # No scripts needed for this package
 
+[project.entry-points."ansible.plugins.inventory"]
+yandex_cloud_inventory = "inventory_plugins.yandex_cloud_inventory:InventoryModule"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["inventory_plugins*"]
@@ -78,7 +81,6 @@ extend-exclude = '''
 )/
 '''
 
-
 [tool.mypy]
 python_version = "3.8"
 warn_return_any = true
@@ -99,7 +101,4 @@ module = [
     "yandexcloud.*",
     "yandex.cloud.*",
 ]
-ignore_missing_imports = true 
-
-[project.entry-points."ansible.plugins.inventory"]
-yandex_cloud_inventory = "inventory_plugins.yandex_cloud_inventory"
+ignore_missing_imports = true
