@@ -57,15 +57,15 @@ class InventoryModule(BaseInventoryPlugin):
         # Проверяем входные параметры
         if not folder_id:
             raise AnsibleParserError("Option 'folder_id' is required")
-        
+
         # Проверяем наличие файла сервисного аккаунта
         if sa_key_file and not os.path.isfile(sa_key_file):
             raise AnsibleError(f"Service account key file not found: {sa_key_file}")
-        
+
         # Если нет IAM токена в конфигурации, берем из переменной окружения
         if not iam_token:
             iam_token = os.getenv('YC_IAM_TOKEN')
-        
+
         # Проверяем, что есть хотя бы один способ аутентификации
         if not sa_key_file and not iam_token:
             raise AnsibleParserError("Either 'service_account_key_file', 'iam_token', or 'YC_IAM_TOKEN' environment variable must be provided")
@@ -82,7 +82,7 @@ class InventoryModule(BaseInventoryPlugin):
                 sdk = SDK(iam_token=iam_token)
             else:
                 raise AnsibleError("No authentication method provided")
-            
+
             zone_client = sdk.client(ZoneServiceStub)
             instance_client = sdk.client(InstanceServiceStub)
         except Exception as e:
@@ -100,7 +100,7 @@ class InventoryModule(BaseInventoryPlugin):
 
             internal_ip = getattr(primary_v4, 'address', None)
             external_ip = getattr(primary_v4.one_to_one_nat, 'address', None) if primary_v4.one_to_one_nat else None
-            
+
             host_name = instance.name.replace("-", "_")
             zone = instance.zone_id.replace("-", "_")
 
@@ -117,11 +117,11 @@ class InventoryModule(BaseInventoryPlugin):
 
             # Назначаем переменные
             self.inventory.set_variable(host_name, 'ansible_host', ansible_ip)
-            self.inventory.set_variable(host_name, 'name', instance.name)
+            self.inventory.set_variable(host_name, 'instance_name', instance.name)
             self.inventory.set_variable(host_name, 'ipv4', external_ip)
             self.inventory.set_variable(host_name, 'private_ipv4', internal_ip)
             for key, value in labels.items():
-                self.inventory.set_variable(host_name, key, value)  
+                self.inventory.set_variable(host_name, key, value)
 
             # Добавляем в группы
             self.inventory.add_group(zone)
