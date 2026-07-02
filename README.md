@@ -132,9 +132,10 @@ ansible-playbook -i inventory.yml playbook.yml
 Добавьте в ваш `ansible.cfg`:
 
 ```ini
+[default]
+inventory_plugins = ./inventory_plugins
 [inventory]
 enable_plugins = yandex_cloud_inventory
-inventory_plugins = ./inventory_plugins
 ```
 
 ## Группировка инстансов
